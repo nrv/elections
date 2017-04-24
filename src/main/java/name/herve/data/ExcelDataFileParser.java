@@ -20,13 +20,15 @@ public class ExcelDataFileParser implements DataProvider {
 	private File f;
 	private FileInputStream in;
 	private DataSchema schema;
+	private int sheet;
 	private Iterator<Row> rowIterator;
 	private List<String> header;
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 
-	public ExcelDataFileParser(DataSchema schema, File f) {
+	public ExcelDataFileParser(DataSchema schema, int sheet, File f) {
 		super();
 		this.schema = schema;
+		this.sheet = sheet;
 		this.f = f;
 	}
 

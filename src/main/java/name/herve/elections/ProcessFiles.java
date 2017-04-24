@@ -3,7 +3,6 @@ package name.herve.elections;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,23 +16,6 @@ import name.herve.data.Data;
 import name.herve.data.DataSchema;
 
 public class ProcessFiles {
-	public final static DecimalFormat D00 = new DecimalFormat("00");
-	
-	public static String getCircoCode(String dep, String circo) {
-		try {
-			int iDep = Integer.parseInt(dep);
-			dep = D00.format(iDep);
-		} catch (NumberFormatException e) {
-		}
-		
-		try {
-			int iCirco = Integer.parseInt(circo);
-			circo = D00.format(iCirco);
-		} catch (NumberFormatException e) {
-		}
-		
-		return dep + "-" + circo;
-	}
 
 	public static void main(String[] args) {
 		Map<String, String> circoLabel = new HashMap<String, String>();
@@ -57,7 +39,7 @@ public class ProcessFiles {
 			Data data = null;
 			Map<String, Set<String>> circoCanton = new HashMap<String, Set<String>>();
 			while ((data = p1.nextData()) != null) {
-				String circo = getCircoCode(data.get("dep"), data.get("2012"));
+				String circo = ElectionUtils.getCircoCode(data.get("dep"), data.get("2012"));
 				if (!circoCanton.containsKey(circo)) {
 					circoCanton.put(circo, new HashSet<String>());
 				}
@@ -96,7 +78,7 @@ public class ProcessFiles {
 			p2.openDataStream();
 			List<Data> datas = new ArrayList<Data>();
 			while ((data = p2.nextData()) != null) {
-				String circo = getCircoCode(data.get("dep-code"), data.get("Circo"));
+				String circo = ElectionUtils.getCircoCode(data.get("dep-code"), data.get("Circo"));
 				data.put("circo-code", circo);
 				data.put("circo-cantons", circoLabel.get(circo));
 				
