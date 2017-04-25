@@ -56,8 +56,26 @@ public class ProcessPres2017 {
 		}
 	}
 	
+	public static Cell createTextCell(Row dataRow, int idx, String value) {
+		Cell c = dataRow.createCell(idx);
+		c.setCellValue(value);
+		c.setCellType(Cell.CELL_TYPE_STRING);
+		return c;
+	}
+	
+	public static Cell createNumericCell(Row dataRow, int idx, int value) {
+		Cell c = dataRow.createCell(idx);
+		c.setCellValue(value);
+		c.setCellType(Cell.CELL_TYPE_NUMERIC);
+		return c;
+	}
+	
+	public static Cell createNumericCell(Row dataRow, int idx, String value) {
+		return createNumericCell(dataRow, idx, Integer.parseInt(value));
+	}
+	
 	public static void main(String[] args) {
-		Map<String, Map<String, Integer>> data = new HashMap<String, Map<String, Integer>>();
+		Map<String, Map<String, String>> data = new HashMap<String, Map<String, String>>();
 		
 		try {
 			File f = new File(args[0]);
@@ -74,17 +92,21 @@ public class ProcessPres2017 {
 			
 			while (rowIterator.hasNext()) {
 				Row line = rowIterator.next();
-				String code = ElectionUtils.getCircoCode(get(line, COL_DEP), get(line, COL_CIRCO));
+				String dep = get(line, COL_DEP);
+				String circo = get(line, COL_CIRCO);
+				String code = ElectionUtils.getCircoCode(dep, circo);
 				System.out.println(code);
-				Map<String, Integer> circoData = new HashMap<String, Integer>();
-				circoData.put("INSCRITS", getInt(line, COL_INSCRITS));
-				circoData.put("VOTANTS", getInt(line, COL_VOTANTS));
-				circoData.put("BLANCS", getInt(line, COL_BLANCS));
-				circoData.put("NULS", getInt(line, COL_NULS));
+				Map<String, String> circoData = new HashMap<String, String>();
+				circoData.put("DEP", dep);
+				circoData.put("CIRCO", circo);
+				circoData.put("INSCRITS", Integer.toString(getInt(line, COL_INSCRITS)));
+				circoData.put("VOTANTS", Integer.toString(getInt(line, COL_VOTANTS)));
+				circoData.put("BLANCS", Integer.toString(getInt(line, COL_BLANCS)));
+				circoData.put("NULS", Integer.toString(getInt(line, COL_NULS)));
 				for (int c = 0; c < NB_CANDIDATS; c++) {
 					String nom = get(line, COL_PREMIER_CANDIDAT + c * COL_OFFSET_SUIVANT + COL_OFFSET_NOM);
 					int votes = getInt(line, COL_PREMIER_CANDIDAT + c * COL_OFFSET_SUIVANT + COL_OFFSET_VOTES);
-					circoData.put(nom, votes);
+					circoData.put(nom, Integer.toString(votes));
 					candidats.add(nom);
 				}
 				
@@ -97,31 +119,34 @@ public class ProcessPres2017 {
 			Sheet exportSheet = export.createSheet("1er tour présidentielle 2017");
 			
 			Row header = exportSheet.createRow(0);
-			header.createCell(0).setCellValue("Circo");
-			header.createCell(1).setCellValue("Inscrits");
-			header.createCell(2).setCellValue("Votants");
-			header.createCell(3).setCellValue("Blancs");
-			header.createCell(4).setCellValue("Nuls");
-			int idx = 5;
+			int colIdx = 0;
+			createTextCell(header, colIdx++, "Code");
+			createTextCell(header, colIdx++, "Département");
+			createTextCell(header, colIdx++, "Circonscription");
+			createTextCell(header, colIdx++, "Inscrits");
+			createTextCell(header, colIdx++, "Votants");
+			createTextCell(header, colIdx++, "Blancs");
+			createTextCell(header, colIdx++, "Nuls");
+			
 			for (String candidat : candidats) {
-				header.createCell(idx).setCellValue(candidat);
-				idx++;
+				createTextCell(header, colIdx++, candidat);
 			}
 			
 			int rowIdx = 1;
-			for (Entry<String, Map<String, Integer>> e : data.entrySet()) {
-				Row dataRow = exportSheet.createRow(rowIdx);
-				dataRow.createCell(0).setCellValue(e.getKey());
-				dataRow.createCell(1).setCellValue(e.getValue().get("INSCRITS"));
-				dataRow.createCell(2).setCellValue(e.getValue().get("VOTANTS"));
-				dataRow.createCell(3).setCellValue(e.getValue().get("BLANCS"));
-				dataRow.createCell(4).setCellValue(e.getValue().get("NULS"));
-				int colIdx = 5;
+			for (Entry<String, Map<String, String>> e : data.entrySet()) {
+				Row dataRow = exportSheet.createRow(rowIdx++);
+				colIdx = 0;
+				createTextCell(dataRow, colIdx++, e.getKey());
+				createTextCell(dataRow, colIdx++, e.getValue().get("DEP"));
+				createNumericCell(dataRow, colIdx++, e.getValue().get("CIRCO"));
+				createNumericCell(dataRow, colIdx++, e.getValue().get("INSCRITS"));
+				createNumericCell(dataRow, colIdx++, e.getValue().get("VOTANTS"));
+				createNumericCell(dataRow, colIdx++, e.getValue().get("BLANCS"));
+				createNumericCell(dataRow, colIdx++, e.getValue().get("NULS"));
+				
 				for (String candidat : candidats) {
-					dataRow.createCell(colIdx).setCellValue(e.getValue().get(candidat));
-					colIdx++;
+					createNumericCell(dataRow, colIdx++, e.getValue().get(candidat));
 				}
-				rowIdx++;
 			}
 			
 			File exportFile = new File(f.getParentFile(), "1er_tour_presidentielle_2017_par_circo.xls");
